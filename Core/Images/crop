@@ -24,7 +24,11 @@ def crop_image(image_path : str | cv2.typing.MatLike,points : np.ndarray) -> cv2
     else:
         # Otherwise, read the image from the file path
         image = cv2.imread(image_path)
-    
+    if not isinstance(points, np.ndarray):
+        points = np.float32(points)
+            
+    if len(points) != 4:
+        raise ValueError("points should be a list of 4 points.")
     # Crop the image
     imageshape : tuple = image.shape
 
