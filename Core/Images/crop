@@ -5,13 +5,13 @@
 # 大部分注释为自动生成,我只作了函数注解...
 # 事实上只适用于平面图片,无法矫正弯折(毕竟只是裁切后投影变换)
 import cv2
-def crop_image(image_path : str | cv2.typing.MatLike,points : np.float32) -> cv2.typing.MatLike:
+def crop_image(image_path : str | cv2.typing.MatLike,points : np.ndarray) -> cv2.typing.MatLike:
     """
     Crop an image to the specified rectangle.
     
     Args:
         image_path(str | cv2.typing.MatLike): Path to the input image.(or an image object)
-        points(np.float32): A tuple or list containing the coordinates of the rectangle to crop.
+        points(np.ndarray): A tuple or list containing the coordinates of the rectangle to crop.
             The format should be (top_left(x,y), top_right(x,y),lower_left(x,y),lower_right(x,y)). 
     
     Returns:
