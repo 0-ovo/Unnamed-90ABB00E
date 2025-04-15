@@ -32,7 +32,7 @@ def crop_image(image_path : str | cv2.typing.MatLike, points : NDArray[np.float3
         # Otherwise, read the image from the file path
         image = cv2.imread(image_path)
         
-    #手工注释:这是为了冗余(尝试将错误的传入转为numpy数组)
+
     if not isinstance(points, np.ndarray): # type: ignore
         points = np.float32(points)
             
@@ -80,7 +80,7 @@ def filterimg(src : cv2.typing.MatLike | str, colorRange : NDArray[np.float32] =
     """
     
     src = cv2.imread(src) if isinstance(src, str) else src
-    #手动注释:当开启严格检查时此句会划线,实际上此句是为了防止传入无效的图片(imread不作检查)
+ 
     if src is None: # type: ignore
         raise ValueError("Invalid image.")
     
@@ -110,21 +110,11 @@ def showimg(src : cv2.typing.MatLike | str) -> None:
         None
     """
     src = cv2.imread(src) if isinstance(src, str) else src
-    #手动注释:当开启严格检查时此句会划线,实际上此句是为了防止传入无效的图片
+
     if src is None: # type: ignore
         raise ValueError("Invalid image.")
     
     cv2.imshow("Image", src)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-a = cv2.imread("E:\\Users\\zsk\\Pictures\\00221.jpg")
-import os
-print(os.access("E:\\Users\\zsk\\Pictures\\00221.jpg",os.R_OK))
 
-b=filterimg(a)
-showimg(a)
-cv2.imwrite("E:\\Users\\zsk\\Pictures\\002.jpg",b)
-
-print(cv2.minAreaRect(cv2.findContours(b, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0][0]))
-showimg(b)
-cv2.waitKey(0)
