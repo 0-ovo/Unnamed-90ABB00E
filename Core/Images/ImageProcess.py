@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 import PIL.Image # 為防止命名衝突,未采取 from PIL import Image
+from typing import Any # type: ignore
 
 def convertToPIL(src : cv2.typing.MatLike) -> PIL.Image.Image:
     """
@@ -24,6 +25,7 @@ def convertToPIL(src : cv2.typing.MatLike) -> PIL.Image.Image:
     return PIL.Image.fromarray(cv2.cvtColor(src, cv2.COLOR_BGR2RGB))
 
 
+# 由于opencv读取中文路径时会出错，请使用PIL库读取后使用此函数转换
 def convertToCV2(src : PIL.Image.Image) -> cv2.typing.MatLike:
     """
     Convert a PIL image to a cv2 image.
@@ -44,7 +46,7 @@ def cropImage(src : str | cv2.typing.MatLike, points : NDArray[np.float32]) -> c
     Parameters:
         image_path(str | cv2.typing.MatLike): Path to the input image.(or an image object)
         points(np.ndarray): A tuple or list containing the coordinates of the rectangle to crop.
-            The format should be (top_left(x,y), top_right(x,y),lower_left(x,y),lower_right(x,y)). 
+            The format should be (top_left(x,y),,lower_left(x,y) top_right(x,y),lower_right(x,y)). 
     
     Returns:
     - cropped_image: The cropped image.
@@ -60,17 +62,18 @@ def cropImage(src : str | cv2.typing.MatLike, points : NDArray[np.float32]) -> c
         src = cv2.imread(src)
         
         
-    #手工注释:这是为了冗余(尝试将错误的传入转为numpy数组)
-    if not isinstance(points, np.ndarray): # type: ignore
-        points = np.array(points, dtype=np.float32)
+    
+    
+    points = np.array(points, dtype=np.float32)
             
     if len(points) != 4:
         raise ValueError("points should be a list of 4 points.")
     # Crop the image
-    imageshape : tuple[int,int] = src.shape
-
-    M : cv2.typing.MatLike = cv2.getPerspectiveTransform(points,np.array([[0,0],[imageshape[1],0],[0,imageshape[0]],[imageshape[1],imageshape[0]]], dtype=np.float32))
-    cropped_image : cv2.typing.MatLike = cv2.warpPerspective(src, M, (imageshape[1], imageshape[0]), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    imageshape = cv2.boundingRect(points)[2:4]
+    print(imageshape)
+    transformPoints : NDArray[np.float32] = np.array([[0,0],[0,imageshape[1]],[imageshape[0],0],[imageshape[0],imageshape[1]]], dtype=np.float32)
+    M : cv2.typing.MatLike = cv2.getPerspectiveTransform(points,transformPoints)
+    cropped_image : cv2.typing.MatLike = cv2.warpPerspective(src, M, (imageshape[0], imageshape[1]), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     
     return cropped_image
 
@@ -181,4 +184,25 @@ def medianFilterImage(src : cv2.typing.MatLike | str,noise : int = 3000, coresiz
     # 中值滤波
     return cv2.medianBlur(src, coresize)
 
-
+def proportionalScalingPILImage(src : PIL.Image.Image, size : tuple[int,int]) -> PIL.Image.Image:
+    """
+    Resize a PIL image to a specified size.
+    注意 ： 当图片大于指定大小时，如果不需要保留原图，请直接使用thumbnail方法缩放图片
+    
+    Parameters:
+        src (PIL.Image.Image): The source image to be resized.
+        size (tuple[int,int]): The target size for resizing.
+        
+    Returns:
+        PIL.Image.Image: The resized image.
+    """
+    if src.size[0] > size[0] or src.size[1] > size[1]:
+        src = src.copy()
+        src.thumbnail(size)
+        return src
+    else:
+        ratio = min(size[0] / src.size[0], size[1] / src.size[1])
+        new_size = (int(src.size[0] * ratio), int(src.size[1] * ratio))
+        return src.resize(new_size)
+    
+    
